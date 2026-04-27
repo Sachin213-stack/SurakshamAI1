@@ -103,6 +103,11 @@ def metrics_at_threshold(rows: list[dict[str, Any]], threshold: int) -> dict[str
     return compute_metrics(rows, lambda r: float(r.get("score", 0)) >= threshold)
 
 
+def has_valid_score(row: dict[str, Any]) -> bool:
+    score = row.get("score")
+    return not row.get("error") and isinstance(score, (int, float))
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -224,10 +229,6 @@ def main() -> int:
 
             if args.rps and args.rps > 0:
                 time.sleep(1.0 / args.rps)
-
-    def has_valid_score(row: dict[str, Any]) -> bool:
-        score = row.get("score")
-        return not row.get("error") and isinstance(score, (int, float))
 
     analyzed_rows = [r for r in rows if has_valid_score(r)]
 
