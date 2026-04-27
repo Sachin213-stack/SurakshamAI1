@@ -8,10 +8,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   
-  // Instagram-style status bar
+  // GenZ-style status bar
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
+    statusBarColor: Color(0xFFFFFDF2), // Cream
+    statusBarIconBrightness: Brightness.dark,
   ));
   
   runApp(
@@ -31,28 +31,30 @@ class SentinelApp extends StatelessWidget {
       title: 'Sentinel',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: Colors.black,
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFF77737), // Instagram orange gradient
-          secondary: Color(0xFFE1306C), // Instagram pink
-          surface: Color(0xFF121212),
-          background: Colors.black,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFFFFDF2), // Cream
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF000000), // Black
+          secondary: Color(0xFFFF6B6B), // Accent Red
+          surface: Color(0xFFE8E6DD), // Light Gray
+          background: Color(0xFFFFFDF2), // Cream
         ),
-        cardColor: const Color(0xFF1A1A1A),
+        cardColor: const Color(0xFFFFFDF2),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black,
+          backgroundColor: Color(0xFFFFFDF2),
+          foregroundColor: Color(0xFF000000),
           elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle.light,
+          systemOverlayStyle: SystemUiOverlayStyle.dark,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Colors.black,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Color(0xFF8E8E8E),
+          backgroundColor: Color(0xFFFFFDF2),
+          selectedItemColor: Color(0xFF000000),
+          unselectedItemColor: Color(0xFF666666),
           type: BottomNavigationBarType.fixed,
           elevation: 0,
         ),
         useMaterial3: true,
+        fontFamily: 'DM Sans',
       ),
       home: const HomeScreen(),
     );
