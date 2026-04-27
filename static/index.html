@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentinel-Agent Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0e1a;
+      --card: #111827;
+      --border: #1f2937;
+      --accent: #ef4444;
+      --warn: #f59e0b;
+      --safe: #10b981;
+      --blue: #3b82f6;
+      --text: #f9fafb;
+      --muted: #6b7280;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { font-size: 24px; }
+    .logo h1 { font-size: 18px; font-weight: 700; letter-spacing: 1px; color: var(--accent); }
+    .logo span { font-size: 11px; color: var(--muted); display: block; }
+    .ws-status {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--muted);
+    }
+    .ws-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--muted); transition: background 0.3s;
+    }
+    .ws-dot.connected { background: var(--safe); box-shadow: 0 0 6px var(--safe); }
+
+    /* ── Layout ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+    /* ── Stats Row ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-card .val {
+      font-size: 32px; font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .stat-card .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .val.red { color: var(--accent); }
+    .val.yellow { color: var(--warn); }
+    .val.green { color: var(--safe); }
+    .val.blue { color: var(--blue); }
+
+    /* ── Main Grid ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    /* ── Panel ── */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-body { padding: 0; }
+
+    /* ── Alert Feed ── */
+    .alert-list { max-height: 480px; overflow-y: auto; }
+    .alert-item {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: background 0.2s;
+      animation: slideIn 0.3s ease;
+    }
+    .alert-item:hover { background: rgba(255,255,255,0.02); }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .score-badge {
+      min-width: 46px; height: 46px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .score-badge.high { background: rgba(239,68,68,0.15); color: var(--accent); border: 1px solid rgba(239,68,68,0.3); }
+    .score-badge.mid  { background: rgba(245,158,11,0.15); color: var(--warn);   border: 1px solid rgba(245,158,11,0.3); }
+    .score-badge.low  { background: rgba(16,185,129,0.15); color: var(--safe);   border: 1px solid rgba(16,185,129,0.3); }
+    .alert-info { flex: 1; min-width: 0; }
+    .alert-action {
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 4px;
+      display: inline-block; margin-bottom: 4px;
+    }
+    .action-block { background: rgba(239,68,68,0.15); color: var(--accent); }
+    .action-warn  { background: rgba(245,158,11,0.15); color: var(--warn); }
+    .action-ignore{ background: rgba(16,185,129,0.15); color: var(--safe); }
+    .alert-text {
+      font-size: 12px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .alert-meta { font-size: 11px; color: #374151; }
+    .alert-reasoning { font-size: 12px; color: #9ca3af; margin-top: 3px; }
+
+    /* ── Test Panel ── */
+    .test-panel { display: flex; flex-direction: column; gap: 0; }
+    .test-form { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+    .test-form label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+    .test-form textarea {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: 10px 12px;
+      font-size: 13px; resize: vertical; min-height: 90px;
+      font-family: inherit;
+    }
+    .test-form textarea:focus { outline: none; border-color: var(--blue); }
+    .test-form select {
+      width: 100%; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: 8px 12px;
+      font-size: 13px; margin-bottom: 10px;
+    }
+    .btn {
+      width: 100%; padding: 10px;
+      border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-danger  { background: var(--accent); color: white; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Result Box ── */
+    .result-box {
+      padding: 16px 18px;
+      display: none;
+    }
+    .result-box.show { display: block; }
+    .result-score-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .result-score-big {
+      font-size: 48px; font-weight: 900; line-height: 1;
+    }
+    .result-action-big {
+      font-size: 14px; font-weight: 700;
+      padding: 4px 12px; border-radius: 6px;
+    }
+    .result-reasoning {
+      font-size: 12px; color: #9ca3af;
+      background: var(--bg); border-radius: 8px;
+      padding: 10px 12px; margin-bottom: 10px;
+      border: 1px solid var(--border);
+    }
+    .result-masked {
+      font-size: 11px; color: var(--muted);
+      background: var(--bg); border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      word-break: break-word;
+    }
+    .result-masked span { color: var(--blue); font-weight: 600; }
+
+    /* ── Score Bar ── */
+    .score-bar-wrap { margin: 10px 0; }
+    .score-bar-bg {
+      height: 6px; background: var(--border);
+      border-radius: 3px; overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%; border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    /* ── Overlay Simulation ── */
+    .overlay-sim {
+      position: fixed; inset: 0;
+      background: rgba(239, 68, 68, 0.18);
+      border: 3px solid var(--accent);
+      pointer-events: none;
+      z-index: 9999;
+      display: none;
+      animation: pulseOverlay 1s ease-in-out infinite;
+    }
+    .overlay-sim.show { display: block; }
+    @keyframes pulseOverlay {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .overlay-banner {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: var(--accent);
+      color: white; text-align: center;
+      padding: 12px; font-weight: 700; font-size: 14px;
+      z-index: 10000; display: none;
+      animation: slideDown 0.3s ease;
+    }
+    .overlay-banner.show { display: block; }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); }
+      to   { transform: translateY(0); }
+    }
+
+    /* ── Privacy Toggle ── */
+    .privacy-toggle {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border);
+    }
+    .toggle-row {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 10px;
+    }
+    .toggle-label { font-size: 12px; color: var(--muted); }
+    .toggle {
+      position: relative; width: 40px; height: 22px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 22px;
+      cursor: pointer; transition: 0.3s;
+    }
+    .slider:before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; left: 3px; top: 3px;
+      transition: 0.3s;
+    }
+    input:checked + .slider { background: var(--blue); }
+    input:checked + .slider:before { transform: translateX(18px); }
+    .privacy-text {
+      font-size: 12px; padding: 10px 12px;
+      background: var(--bg); border-radius: 8px;
+      border: 1px solid var(--border);
+      color: var(--muted); min-height: 50px;
+      word-break: break-word;
+    }
+
+    /* ── Empty State ── */
+    .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- Red Overlay Simulation -->
+<div class="overlay-sim" id="overlayBg"></div>
+<div class="overlay-banner" id="overlayBanner">
+  🚨 FRAUD DETECTED — Sentinel-Agent has blocked this threat
+  <span id="overlayClose" onclick="dismissOverlay()" style="cursor:pointer;margin-left:16px;opacity:0.7">✕ Dismiss</span>
+</div>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">🛡️</span>
+    <div>
+      <h1>SENTINEL-AGENT</h1>
+      <span>Autonomous Fraud Defense</span>
+    </div>
+  </div>
+  <div class="ws-status">
+    <div class="ws-dot" id="wsDot"></div>
+    <span id="wsLabel">Connecting...</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="val blue" id="statTotal">0</div>
+      <div class="lbl">Total Analyzed</div>
+    </div>
+    <div class="stat-card">
+      <div class="val red" id="statBlocked">0</div>
+      <div class="lbl">Blocked</div>
+    </div>
+    <div class="stat-card">
+      <div class="val yellow" id="statWarned">0</div>
+      <div class="lbl">Warned</div>
+    </div>
+    <div class="stat-card">
+      <div class="val green" id="statIgnored">0</div>
+      <div class="lbl">Safe</div>
+    </div>
+    <div class="stat-card">
+      <div class="val red" id="stat24h">0</div>
+      <div class="lbl">Last 24h</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" id="statAvg" style="color:#a78bfa">0</div>
+      <div class="lbl">Avg Score</div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Alert Feed -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>🔴 Live Alert Feed</span>
+        <span id="alertCount" style="color:var(--muted);font-size:11px">0 alerts</span>
+      </div>
+      <div class="panel-body">
+        <div class="alert-list" id="alertList">
+          <div class="empty" id="emptyState">No alerts yet. Send a test message →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <!-- Test Input -->
+      <div class="panel">
+        <div class="panel-header">⚡ Test Analyzer</div>
+        <div class="panel-body test-panel">
+          <div class="test-form">
+            <label>Message Type</label>
+            <select id="msgType">
+              <option value="sms">SMS</option>
+              <option value="call_transcript">Call Transcript</option>
+            </select>
+            <label>Message Text</label>
+            <textarea id="msgText" placeholder="Paste suspicious SMS or call transcript here..."></textarea>
+          </div>
+          <div style="padding:12px 18px;border-bottom:1px solid var(--border);">
+            <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()">Analyze Now</button>
+          </div>
+
+          <!-- Result -->
+          <div class="result-box" id="resultBox">
+            <div class="result-score-row">
+              <div class="result-score-big" id="resultScore">--</div>
+              <div>
+                <div class="result-action-big" id="resultAction">--</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px">Fraud Probability</div>
+              </div>
+            </div>
+            <div class="score-bar-wrap">
+              <div class="score-bar-bg">
+                <div class="score-bar-fill" id="scoreBar" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="result-reasoning" id="resultReasoning"></div>
+            <div class="result-masked" id="resultMasked"></div>
+          </div>
+
+          <!-- Privacy Toggle -->
+          <div class="privacy-toggle">
+            <div class="toggle-row">
+              <span class="toggle-label">Privacy Shield (Raw ↔ Masked)</span>
+              <label class="toggle">
+                <input type="checkbox" id="privacyToggle" onchange="togglePrivacy()" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="privacy-text" id="privacyText">Send a message to see privacy masking in action.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Scam Presets -->
+      <div class="panel">
+        <div class="panel-header">🎯 Quick Test Presets</div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <button class="btn" style="background:rgba(239,68,68,0.1);color:var(--accent);border:1px solid rgba(239,68,68,0.2);text-align:left;padding:10px 14px;"
+            onclick="preset('Your HDFC account is blocked. Share OTP 8821 immediately to verify KYC.')">
+            🏦 Bank OTP Scam
+          </button>
+          <button class="btn" style="background:rgba(245,158,11,0.1);color:var(--warn);border:1px solid rgba(245,158,11,0.2);text-align:left;padding:10px 14px;"
+            onclick="preset('Congratulations Rahul! You won Rs 5,00,000 lottery. Call 9876543210 to claim.')">
+            🎰 Lottery Scam
+          </button>
+          <button class="btn" style="background:rgba(239,68,68,0.1);color:var(--accent);border:1px solid rgba(239,68,68,0.2);text-align:left;padding:10px 14px;"
+            onclick="preset('Your electricity will be cut in 2 hours. Pay Rs 1850 on this link: http://fake-ebill.com/pay')">
+            ⚡ Utility Scam
+          </button>
+          <button class="btn" style="background:rgba(16,185,129,0.1);color:var(--safe);border:1px solid rgba(16,185,129,0.2);text-align:left;padding:10px 14px;"
+            onclick="preset('Your OTP for SBI NetBanking login is 293847. Valid for 10 minutes. Do not share.')">
+            ✅ Legit OTP (Safe)
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8000';
+  let rawText = '';
+  let maskedText = '';
+  let alertCount = 0;
+
+  // ── WebSocket ──────────────────────────────────────────────────────────────
+  function connectWS() {
+    const ws = new WebSocket(`ws://localhost:8000/ws/overlay/dashboard`);
+    ws.onopen = () => {
+      document.getElementById('wsDot').classList.add('connected');
+      document.getElementById('wsLabel').textContent = 'Live Connected';
+    };
+    ws.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.event === 'fraud_alert') {
+        showOverlay(data);
+        prependAlert(data);
+        loadAnalytics();
+      }
+    };
+    ws.onclose = () => {
+      document.getElementById('wsDot').classList.remove('connected');
+      document.getElementById('wsLabel').textContent = 'Reconnecting...';
+      setTimeout(connectWS, 3000);
+    };
+  }
+  connectWS();
+
+  // ── Analytics ─────────────────────────────────────────────────────────────
+  async function loadAnalytics() {
+    try {
+      const r = await fetch(`${API}/analytics`);
+      const d = await r.json();
+      document.getElementById('statTotal').textContent   = d.total_analyzed;
+      document.getElementById('statBlocked').textContent = d.total_blocked;
+      document.getElementById('statWarned').textContent  = d.total_warned;
+      document.getElementById('statIgnored').textContent = d.total_ignored;
+      document.getElementById('stat24h').textContent     = d.scams_last_24h;
+      document.getElementById('statAvg').textContent     = d.avg_score;
+    } catch(e) {}
+  }
+
+  // ── Load History ──────────────────────────────────────────────────────────
+  async function loadHistory() {
+    try {
+      const r = await fetch(`${API}/alerts/history?page_size=50`);
+      const d = await r.json();
+      if (d.items && d.items.length > 0) {
+        document.getElementById('alertList').innerHTML = '';
+        d.items.forEach(item => appendAlertItem(item));
+        alertCount = d.total;
+        document.getElementById('alertCount').textContent = `${alertCount} alerts`;
+      }
+    } catch(e) {}
+  }
+
+  // ── Analyze ───────────────────────────────────────────────────────────────
+  async function runAnalysis() {
+    const text = document.getElementById('msgText').value.trim();
+    const type = document.getElementById('msgType').value;
+    if (!text) return;
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+
+    try {
+      const r = await fetch(`${API}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, raw_text: text, device_id: 'dashboard' })
+      });
+      const d = await r.json();
+      showResult(d, text);
+      prependAlert(d);
+      loadAnalytics();
+    } catch(e) {
+      alert('Error connecting to backend. Is the server running?');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analyze Now';
+    }
+  }
+
+  // ── Show Result ───────────────────────────────────────────────────────────
+  function showResult(d, original) {
+    rawText = original;
+    maskedText = d.masked_text;
+
+    const box = document.getElementById('resultBox');
+    box.classList.add('show');
+
+    const scoreEl = document.getElementById('resultScore');
+    scoreEl.textContent = d.score;
+
+    const actionEl = document.getElementById('resultAction');
+    actionEl.textContent = d.action.replace('_', ' ');
+
+    // Color coding
+    if (d.score >= 80) {
+      scoreEl.style.color = 'var(--accent)';
+      actionEl.className = 'result-action-big action-block';
+      document.getElementById('scoreBar').style.background = 'var(--accent)';
+    } else if (d.score >= 50) {
+      scoreEl.style.color = 'var(--warn)';
+      actionEl.className = 'result-action-big action-warn';
+      document.getElementById('scoreBar').style.background = 'var(--warn)';
+    } else {
+      scoreEl.style.color = 'var(--safe)';
+      actionEl.className = 'result-action-big action-ignore';
+      document.getElementById('scoreBar').style.background = 'var(--safe)';
+    }
+
+    document.getElementById('scoreBar').style.width = d.score + '%';
+    document.getElementById('resultReasoning').textContent = '💬 ' + d.reasoning;
+
+    // Privacy text
+    updatePrivacyText();
+
+    // Show overlay if high score
+    if (d.score >= 80) showOverlay(d);
+  }
+
+  // ── Privacy Toggle ────────────────────────────────────────────────────────
+  function togglePrivacy() { updatePrivacyText(); }
+
+  function updatePrivacyText() {
+    const showMasked = document.getElementById('privacyToggle').checked;
+    const el = document.getElementById('privacyText');
+    if (!rawText) return;
+    if (showMasked) {
+      el.innerHTML = maskedText.replace(/\[([A-Z_]+)\]/g, '<span>[$1]</span>');
+    } else {
+      el.textContent = rawText;
+    }
+  }
+
+  // ── Overlay ───────────────────────────────────────────────────────────────
+  let overlayTimer;
+  function showOverlay(d) {
+    document.getElementById('overlayBg').classList.add('show');
+    document.getElementById('overlayBanner').classList.add('show');
+    clearTimeout(overlayTimer);
+    overlayTimer = setTimeout(dismissOverlay, 5000);
+  }
+  function dismissOverlay() {
+    document.getElementById('overlayBg').classList.remove('show');
+    document.getElementById('overlayBanner').classList.remove('show');
+  }
+
+  // ── Alert Feed ────────────────────────────────────────────────────────────
+  function prependAlert(d) {
+    document.getElementById('emptyState')?.remove();
+    const list = document.getElementById('alertList');
+    const el = buildAlertEl(d);
+    list.insertBefore(el, list.firstChild);
+    alertCount++;
+    document.getElementById('alertCount').textContent = `${alertCount} alerts`;
+  }
+
+  function appendAlertItem(d) {
+    document.getElementById('emptyState')?.remove();
+    document.getElementById('alertList').appendChild(buildAlertEl(d));
+  }
+
+  function buildAlertEl(d) {
+    const score = d.score;
+    const cls = score >= 80 ? 'high' : score >= 50 ? 'mid' : 'low';
+    const actionCls = d.action === 'BLOCK_CALL' ? 'action-block' : d.action === 'OVERLAY_WARNING' ? 'action-warn' : 'action-ignore';
+    const time = new Date(d.timestamp || Date.now()).toLocaleTimeString();
+
+    const el = document.createElement('div');
+    el.className = 'alert-item';
+    el.innerHTML = `
+      <div class="score-badge ${cls}">${score}</div>
+      <div class="alert-info">
+        <span class="alert-action ${actionCls}">${(d.action||'').replace('_',' ')}</span>
+        <div class="alert-text">${d.masked_text || ''}</div>
+        <div class="alert-reasoning">${d.reasoning || ''}</div>
+        <div class="alert-meta">${time}</div>
+      </div>`;
+    return el;
+  }
+
+  // ── Presets ───────────────────────────────────────────────────────────────
+  function preset(text) {
+    document.getElementById('msgText').value = text;
+    runAnalysis();
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  loadAnalytics();
+  loadHistory();
+  setInterval(loadAnalytics, 10000);
+</script>
+</body>
+</html>

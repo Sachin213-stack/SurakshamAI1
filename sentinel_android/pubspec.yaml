@@ -1,0 +1,41 @@
+name: sentinel_android
+description: Sentinel-Agent - Autonomous Fraud Defense for Android
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # HTTP & WebSocket
+  http: ^1.2.0
+  web_socket_channel: ^2.4.0
+
+  # Local Notifications (Overlay Alert)
+  flutter_local_notifications: ^17.0.0
+
+  # Background Services
+  flutter_background_service: ^5.0.5
+
+  # Permissions
+  permission_handler: ^11.3.0
+
+  # Storage
+  shared_preferences: ^2.2.3
+
+  # State Management
+  provider: ^6.1.2
+
+  # UI
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
