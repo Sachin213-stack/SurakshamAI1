@@ -1,0 +1,92 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # manual trigger button bhi hoga
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout code ──────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Setup Java ─────────────────────────────────────────────────────────
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # ── Setup Flutter ──────────────────────────────────────────────────────
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+          channel: 'stable'
+          cache: true
+
+      # ── Get dependencies ───────────────────────────────────────────────────
+      - name: Flutter pub get
+        working-directory: sentinel_android
+        run: flutter pub get
+
+      # ── Inject backend URL from secret ────────────────────────────────────
+      - name: Set API URL
+        working-directory: sentinel_android
+        run: |
+          echo "API_URL=${{ secrets.API_URL || 'https://your-railway-url.up.railway.app' }}" >> $GITHUB_ENV
+
+      # ── Build release APK ─────────────────────────────────────────────────
+      - name: Build APK
+        working-directory: sentinel_android
+        run: flutter build apk --release --dart-define=API_URL=${{ secrets.API_URL || 'https://your-railway-url.up.railway.app' }}
+
+      # ── Rename APK ────────────────────────────────────────────────────────
+      - name: Rename APK
+        run: |
+          mkdir -p release
+          cp sentinel_android/build/app/outputs/flutter-apk/app-release.apk \
+             release/SentinelAgent-v${{ github.run_number }}.apk
+
+      # ── Upload as artifact (always available) ─────────────────────────────
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SentinelAgent-APK
+          path: release/SentinelAgent-v${{ github.run_number }}.apk
+          retention-days: 30
+
+      # ── Create GitHub Release (downloadable by anyone) ────────────────────
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "Sentinel Agent v1.0.${{ github.run_number }}"
+          body: |
+            ## 🛡️ Sentinel Agent — Autonomous Fraud Defense
+
+            ### What's included:
+            - ✅ Automatic SMS fraud detection
+            - ✅ Call screening with Block/Allow decision
+            - ✅ Real-time red overlay alerts
+            - ✅ Privacy-first PII masking
+            - ✅ Background protection (survives reboot)
+
+            ### Install:
+            1. Download `SentinelAgent-vX.apk` below
+            2. Enable "Install from unknown sources" on your Android phone
+            3. Install and grant SMS + Call permissions
+            4. Done — protection is automatic!
+
+            ### Backend:
+            Connected to: `${{ secrets.API_URL || 'Configure API_URL in repo secrets' }}`
+          files: release/SentinelAgent-v${{ github.run_number }}.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
