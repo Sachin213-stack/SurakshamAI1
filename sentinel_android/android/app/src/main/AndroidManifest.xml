@@ -22,6 +22,11 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
 
+        <!-- Flutter V2 embedding -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
         <!-- ── Main Activity ── -->
         <activity
             android:name=".MainActivity"
