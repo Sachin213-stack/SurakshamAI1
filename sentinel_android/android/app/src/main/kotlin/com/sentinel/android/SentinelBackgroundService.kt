@@ -31,7 +31,7 @@ class SentinelBackgroundService : Service() {
                 val deviceId = prefs.getString("device_id",
                     android.provider.Settings.Secure.getAndroidId(contentResolver))!!
                 val fcmToken = prefs.getString("fcm_token", "no_fcm_token") ?: "no_fcm_token"
-                val apiKey = prefs.getString("api_key", "")
+                val apiKey = prefs.getString("api_key", "") ?: ""
 
                 SentinelApiClient.registerDevice(
                     apiUrl = apiUrl,
