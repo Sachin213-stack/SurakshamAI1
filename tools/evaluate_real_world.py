@@ -9,6 +9,7 @@ from typing import Any
 
 POSITIVE_LABELS = {"scam", "fraud", "phishing", "vishing", "smishing", "1", "true", "positive"}
 NEGATIVE_LABELS = {"legitimate", "ham", "safe", "0", "false", "negative", "normal"}
+MAX_ERROR_TEXT_CHARS = 300
 
 
 def parse_args() -> argparse.Namespace:
@@ -98,6 +99,10 @@ def get_slice_metrics(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
     return out
 
 
+def metrics_at_threshold(rows: list[dict[str, Any]], threshold: int) -> dict[str, Any]:
+    return compute_metrics(rows, lambda r: float(r.get("score", 0)) >= threshold)
+
+
 def main() -> int:
     args = parse_args()
     try:
@@ -155,7 +160,7 @@ def main() -> int:
             try:
                 result["ground_truth_scam"] = normalize_truth(result["ground_truth"])
             except ValueError as exc:
-                result["error"] = str(exc)
+                result["error"] = f"Invalid ground_truth label: {exc}"
                 result["latency_ms"] = round((time.perf_counter() - started) * 1000, 3)
                 rows.append(result)
                 errors += 1
@@ -183,7 +188,7 @@ def main() -> int:
                 response = client.post(f"{args.base_url.rstrip('/')}{endpoint}", headers=headers, json=payload)
                 result["http_status"] = response.status_code
                 if response.status_code >= 400:
-                    result["error"] = f"HTTP {response.status_code}: {response.text[:300]}"
+                    result["error"] = f"HTTP {response.status_code}: {response.text[:MAX_ERROR_TEXT_CHARS]}"
                 else:
                     body = response.json()
                     result["alert_id"] = body.get("id")
@@ -223,9 +228,6 @@ def main() -> int:
     analyzed_rows = [r for r in rows if not r.get("error") and isinstance(r.get("score"), (int, float))]
 
     overall_metrics = compute_metrics(analyzed_rows, lambda r: r.get("action") != "IGNORE")
-    def metrics_at_threshold(rows: list[dict[str, Any]], threshold: int) -> dict[str, Any]:
-        return compute_metrics(rows, lambda r: float(r.get("score", 0)) >= threshold)
-
     threshold_sensitivity = {str(t): metrics_at_threshold(analyzed_rows, t) for t in threshold_grid}
 
     score_bands = {
