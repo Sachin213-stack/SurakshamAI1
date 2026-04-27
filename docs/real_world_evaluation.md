@@ -2,8 +2,8 @@
 
 This repository now includes an offline evaluation runner for real-world data:
 
-- Script: `/home/runner/work/SurakshamAI1/SurakshamAI1/tools/evaluate_real_world.py`
-- Dataset template: `/home/runner/work/SurakshamAI1/SurakshamAI1/data/real_world_eval_template.csv`
+- Script: `tools/evaluate_real_world.py`
+- Dataset template: `data/real_world_eval_template.csv`
 
 ## 1) Prepare dataset
 
@@ -32,11 +32,11 @@ Run with frozen thresholds matching current defaults:
 ## 3) Replay data through API
 
 ```bash
-python /home/runner/work/SurakshamAI1/SurakshamAI1/tools/evaluate_real_world.py \
+python tools/evaluate_real_world.py \
   --base-url http://127.0.0.1:8000 \
   --api-key <YOUR_API_KEY> \
-  --input-csv /home/runner/work/SurakshamAI1/SurakshamAI1/data/real_world_eval_template.csv \
-  --output-dir /home/runner/work/SurakshamAI1/SurakshamAI1/evaluation_output \
+  --input-csv data/real_world_eval_template.csv \
+  --output-dir evaluation_output \
   --overlay-threshold 50 \
   --block-threshold 80 \
   --threshold-grid 40,50,60,70,80,90
@@ -47,11 +47,11 @@ python /home/runner/work/SurakshamAI1/SurakshamAI1/tools/evaluate_real_world.py 
 To update `/alerts/feedback` during replay from ground truth labels:
 
 ```bash
-python /home/runner/work/SurakshamAI1/SurakshamAI1/tools/evaluate_real_world.py \
+python tools/evaluate_real_world.py \
   --base-url http://127.0.0.1:8000 \
   --api-key <YOUR_API_KEY> \
-  --input-csv /home/runner/work/SurakshamAI1/SurakshamAI1/data/real_world_eval_template.csv \
-  --output-dir /home/runner/work/SurakshamAI1/SurakshamAI1/evaluation_output \
+  --input-csv data/real_world_eval_template.csv \
+  --output-dir evaluation_output \
   --apply-feedback
 ```
 
