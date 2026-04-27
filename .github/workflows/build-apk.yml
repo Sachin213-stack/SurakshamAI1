@@ -32,11 +32,19 @@ jobs:
         run: |
           echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
           echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          echo "--- local.properties content ---"
           cat local.properties
+          echo "--- Environment check ---"
+          echo "FLUTTER_ROOT=$FLUTTER_ROOT"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la $FLUTTER_ROOT/packages/flutter_tools/gradle/ || echo "Flutter gradle tools not found"
 
       - name: Flutter pub get
         working-directory: sentinel_android
         run: flutter pub get
+
+      - name: Flutter doctor
+        run: flutter doctor -v
 
       - name: Flutter analyze (ignore errors)
         working-directory: sentinel_android
