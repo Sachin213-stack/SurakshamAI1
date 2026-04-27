@@ -7,6 +7,13 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  
+  // Instagram-style status bar
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+  ));
+  
   runApp(
     ChangeNotifierProvider(
       create: (_) => SentinelService(),
@@ -25,13 +32,26 @@ class SentinelApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF0A0E1A),
+        scaffoldBackgroundColor: Colors.black,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFEF4444),
-          secondary: Color(0xFF3B82F6),
-          surface: Color(0xFF111827),
+          primary: Color(0xFFF77737), // Instagram orange gradient
+          secondary: Color(0xFFE1306C), // Instagram pink
+          surface: Color(0xFF121212),
+          background: Colors.black,
         ),
-        cardColor: const Color(0xFF111827),
+        cardColor: const Color(0xFF1A1A1A),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          elevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.black,
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Color(0xFF8E8E8E),
+          type: BottomNavigationBarType.fixed,
+          elevation: 0,
+        ),
         useMaterial3: true,
       ),
       home: const HomeScreen(),
