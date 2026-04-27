@@ -4,7 +4,6 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.core.app.ActivityCompat
@@ -20,24 +19,17 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "requestPermissions" -> {
-                    requestAllPermissions()
-                    result.success(true)
-                }
+                "requestPermissions" -> { requestAllPermissions(); result.success(true) }
                 "startBackgroundService" -> {
                     startForegroundService(Intent(this, SentinelBackgroundService::class.java))
                     result.success(true)
                 }
-                "checkOverlayPermission" -> {
-                    result.success(Settings.canDrawOverlays(this))
-                }
+                "checkOverlayPermission" -> result.success(Settings.canDrawOverlays(this))
                 "requestOverlayPermission" -> {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName"))
-                    startActivity(intent)
+                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:$packageName")))
                     result.success(true)
                 }
                 else -> result.notImplemented()
@@ -49,16 +41,14 @@ class MainActivity : FlutterActivity() {
         super.onCreate(savedInstanceState)
         NotificationHelper.createChannels(this)
         requestAllPermissions()
-        // Start background service
         startForegroundService(Intent(this, SentinelBackgroundService::class.java))
     }
 
     private fun requestAllPermissions() {
-        val permissions = mutableListOf(
+        val permissions = arrayOf(
             Manifest.permission.RECEIVE_SMS,
             Manifest.permission.READ_SMS,
             Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.POST_NOTIFICATIONS,
         )
         val notGranted = permissions.filter {
             ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
