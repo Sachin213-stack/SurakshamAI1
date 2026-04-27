@@ -11,6 +11,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   late TextEditingController _apiCtrl;
   late TextEditingController _deviceCtrl;
+  late TextEditingController _apiKeyCtrl;
 
   @override
   void initState() {
@@ -18,6 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final svc = context.read<SentinelService>();
     _apiCtrl = TextEditingController(text: svc.apiUrl);
     _deviceCtrl = TextEditingController(text: svc.deviceId);
+    _apiKeyCtrl = TextEditingController(text: svc.apiKey);
   }
 
   @override
@@ -34,13 +36,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Field('Backend API URL', _apiCtrl, hint: 'http://10.0.2.2:8000'),
           const SizedBox(height: 12),
           _Field('Device ID', _deviceCtrl, hint: 'android_device_001'),
+          const SizedBox(height: 12),
+          _Field('API Key (optional)', _apiKeyCtrl, hint: 'your-api-key'),
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B82F6)),
               onPressed: () async {
-                await svc.saveSettings(_apiCtrl.text.trim(), _deviceCtrl.text.trim());
+                await svc.saveSettings(
+                  _apiCtrl.text.trim(),
+                  _deviceCtrl.text.trim(),
+                  _apiKeyCtrl.text.trim(),
+                );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Settings saved & reconnected')));
               },

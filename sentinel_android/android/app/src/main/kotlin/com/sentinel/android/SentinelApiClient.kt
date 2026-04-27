@@ -25,7 +25,8 @@ object SentinelApiClient {
         text: String,
         type: String = "sms",
         sourceNumber: String? = null,
-        deviceId: String = "android_device"
+        deviceId: String = "android_device",
+        apiKey: String? = null
     ): AnalysisResult {
         val url = URL("$apiUrl/analyze")
         val conn = url.openConnection() as HttpURLConnection
@@ -34,6 +35,9 @@ object SentinelApiClient {
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
             conn.setRequestProperty("Accept", "application/json")
+            if (!apiKey.isNullOrBlank()) {
+                conn.setRequestProperty("X-API-Key", apiKey)
+            }
             conn.doOutput = true
             conn.connectTimeout = 8000
             conn.readTimeout = 10000
@@ -60,12 +64,21 @@ object SentinelApiClient {
         }
     }
 
-    fun registerDevice(apiUrl: String, deviceId: String, fcmToken: String, appVersion: String) {
+    fun registerDevice(
+        apiUrl: String,
+        deviceId: String,
+        fcmToken: String,
+        appVersion: String,
+        apiKey: String? = null
+    ) {
         val url = URL("$apiUrl/device/register")
         val conn = url.openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
+            if (!apiKey.isNullOrBlank()) {
+                conn.setRequestProperty("X-API-Key", apiKey)
+            }
             conn.doOutput = true
             conn.connectTimeout = 5000
 
@@ -83,12 +96,21 @@ object SentinelApiClient {
         }
     }
 
-    fun submitFeedback(apiUrl: String, alertId: String, feedback: String, deviceId: String) {
+    fun submitFeedback(
+        apiUrl: String,
+        alertId: String,
+        feedback: String,
+        deviceId: String,
+        apiKey: String? = null
+    ) {
         val url = URL("$apiUrl/alerts/feedback")
         val conn = url.openConnection() as HttpURLConnection
         try {
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json")
+            if (!apiKey.isNullOrBlank()) {
+                conn.setRequestProperty("X-API-Key", apiKey)
+            }
             conn.doOutput = true
             conn.connectTimeout = 5000
             val body = JSONObject().apply {

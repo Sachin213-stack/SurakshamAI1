@@ -28,7 +28,7 @@ from agent.privacy import scrub_pii_with_diff
 from agent.memory import store_pattern, _get_index, _get_embedder
 from db.store import (
     save_alert, get_alerts, get_analytics,
-    register_device, update_feedback,
+    register_device, update_feedback, get_alert_by_id,
 )
 
 settings = get_settings()
@@ -216,11 +216,9 @@ async def submit_feedback(
 
     # If confirmed scam → store in Pinecone memory for future detection
     if payload.feedback == "confirmed_scam":
-        total, items = get_alerts(page=1, page_size=1)
-        for item in items:
-            if item.id == payload.alert_id:
-                await store_pattern(item.masked_text, label="scam")
-                break
+        item = get_alert_by_id(payload.alert_id)
+        if item:
+            await store_pattern(item.masked_text, label="scam")
 
     return {"updated": True, "feedback": payload.feedback}
 
