@@ -73,4 +73,4 @@ When `ground_truth=scam`, feedback is sent as `confirmed_scam`; otherwise `false
 - Run model in scoring-only mode first (no enforcement changes).
 - Compare decisions with outcomes and feedback rates.
 - Promote gradually by user/device percentage with rollback guardrails.
-- Re-run this offline benchmark regularly (for example monthly) and compare metrics before threshold changes.
+- Re-run this offline benchmark regularly (e.g., monthly) and compare metrics before threshold changes.

@@ -103,7 +103,7 @@ def main() -> int:
         import httpx  # type: ignore
     except ModuleNotFoundError as exc:
         raise SystemExit(
-            "Missing dependency: httpx. Install project requirements first (pip install -r requirements.txt)."
+            "Missing dependency: httpx. Install dependencies before running (for example: pip install -r requirements.txt or pip install httpx)."
         ) from exc
 
     input_path = Path(args.input_csv)
@@ -220,10 +220,10 @@ def main() -> int:
     analyzed_rows = [r for r in rows if not r.get("error") and isinstance(r.get("score"), (int, float))]
 
     overall_metrics = compute_metrics(analyzed_rows, lambda r: r.get("action") != "IGNORE")
-    threshold_sensitivity = {
-        str(t): compute_metrics(analyzed_rows, lambda r, t=t: float(r.get("score", 0)) >= t)
-        for t in threshold_grid
-    }
+    def metrics_at_threshold(threshold: int) -> dict[str, Any]:
+        return compute_metrics(analyzed_rows, lambda r: float(r.get("score", 0)) >= threshold)
+
+    threshold_sensitivity = {str(t): metrics_at_threshold(t) for t in threshold_grid}
 
     score_bands = {
         "0-49": sum(1 for r in analyzed_rows if 0 <= float(r.get("score", 0)) < args.overlay_threshold),
