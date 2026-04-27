@@ -46,7 +46,7 @@ def normalize_truth(value: str) -> bool:
     raise ValueError(f"Unsupported ground_truth label: {value!r}")
 
 
-def safe_div(num: float, den: float) -> float:
+def divide_or_zero(num: float, den: float) -> float:
     return round(num / den, 6) if den else 0.0
 
 
@@ -67,9 +67,9 @@ def compute_metrics(rows: list[dict[str, Any]], positive_fn) -> dict[str, Any]:
             tn += 1
 
     total = tp + fp + fn + tn
-    precision = safe_div(tp, tp + fp)
-    recall = safe_div(tp, tp + fn)
-    f1 = safe_div(2 * precision * recall, precision + recall)
+    precision = divide_or_zero(tp, tp + fp)
+    recall = divide_or_zero(tp, tp + fn)
+    f1 = divide_or_zero(2 * precision * recall, precision + recall)
 
     return {
         "samples": total,
@@ -80,9 +80,9 @@ def compute_metrics(rows: list[dict[str, Any]], positive_fn) -> dict[str, Any]:
         "precision": precision,
         "recall": recall,
         "f1": f1,
-        "false_positive_rate": safe_div(fp, fp + tn),
-        "false_negative_rate": safe_div(fn, fn + tp),
-        "accuracy": safe_div(tp + tn, total),
+        "false_positive_rate": divide_or_zero(fp, fp + tn),
+        "false_negative_rate": divide_or_zero(fn, fn + tp),
+        "accuracy": divide_or_zero(tp + tn, total),
     }
 
 
@@ -118,7 +118,7 @@ def main() -> int:
 
     if args.overlay_threshold >= args.block_threshold:
         raise ValueError(
-            f"overlay-threshold ({args.overlay_threshold}) must be lower than block-threshold ({args.block_threshold})"
+            f"overlay-threshold ({args.overlay_threshold}) must be less than block-threshold ({args.block_threshold})"
         )
 
     threshold_grid = [int(x.strip()) for x in args.threshold_grid.split(",") if x.strip()]
@@ -225,7 +225,11 @@ def main() -> int:
             if args.rps and args.rps > 0:
                 time.sleep(1.0 / args.rps)
 
-    analyzed_rows = [r for r in rows if not r.get("error") and isinstance(r.get("score"), (int, float))]
+    def has_valid_score(row: dict[str, Any]) -> bool:
+        score = row.get("score")
+        return not row.get("error") and isinstance(score, (int, float))
+
+    analyzed_rows = [r for r in rows if has_valid_score(r)]
 
     overall_metrics = compute_metrics(analyzed_rows, lambda r: r.get("action") != "IGNORE")
     threshold_sensitivity = {str(t): metrics_at_threshold(analyzed_rows, t) for t in threshold_grid}
