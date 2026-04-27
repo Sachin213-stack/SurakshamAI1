@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -18,7 +19,6 @@
 
     <application
         android:label="Sentinel"
-        android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">
 
@@ -66,6 +66,9 @@
             <intent-filter>
                 <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>
+            <meta-data
+                android:name="android.telecom.INCLUDE_EXTERNAL_CALLS"
+                android:value="true" />
         </service>
 
         <!-- ── Background Foreground Service ── -->

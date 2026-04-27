@@ -38,7 +38,7 @@ jobs:
       - name: Build APK
         working-directory: sentinel_android
         run: |
-          flutter build apk --release --verbose \
+          flutter build apk --release \
             --dart-define=API_URL=${{ secrets.API_URL || 'https://sentinel-backend.up.railway.app' }}
 
       - name: Rename APK
