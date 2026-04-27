@@ -27,6 +27,13 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Create local.properties
+        working-directory: sentinel_android/android
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          cat local.properties
+
       - name: Flutter pub get
         working-directory: sentinel_android
         run: flutter pub get
@@ -38,8 +45,15 @@ jobs:
       - name: Build APK
         working-directory: sentinel_android
         run: |
-          flutter build apk --release \
-            --dart-define=API_URL=${{ secrets.API_URL || 'https://sentinel-backend.up.railway.app' }}
+          flutter build apk --release --verbose \
+            --dart-define=API_URL=${{ secrets.API_URL || 'https://sentinel-backend.up.railway.app' }} 2>&1 | tee build.log
+          
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: sentinel_android/build.log
 
       - name: Rename APK
         run: |

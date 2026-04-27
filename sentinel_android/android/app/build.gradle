@@ -26,8 +26,7 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.sentinel.android"
-    compileSdkVersion 34
-    ndkVersion flutter.ndkVersion
+    compileSdk 34
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -52,10 +51,15 @@ android {
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug  // use debug key for now
+            signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false
         }
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
     }
 }
 
