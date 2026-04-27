@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sentinel — Instagram Style Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 24px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #F77737, #E1306C, #C13584);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .header p {
+      font-size: 13px;
+      color: #8E8E8E;
+    }
+    /* Phone Frame */
+    .phone {
+      width: 375px;
+      height: 812px;
+      background: #000;
+      border-radius: 48px;
+      border: 3px solid #262626;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.9);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Notch */
+    .notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 28px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 20;
+    }
+    /* Status Bar */
+    .status-bar {
+      height: 44px;
+      padding: 8px 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    /* App Header */
+    .app-header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 0.5px solid #262626;
+      flex-shrink: 0;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #F77737, #E1306C, #C13584);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+    .notif-icon {
+      font-size: 28px;
+      cursor: pointer;
+    }
+    /* Stories */
+    .stories {
+      height: 110px;
+      padding: 12px 16px;
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .stories::-webkit-scrollbar { display: none; }
+    .story {
+      min-width: 95px;
+      height: 95px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(247,119,55,0.25), rgba(225,48,108,0.05));
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .story.active { border-color: #10B981; }
+    .story.threat { border-color: #E1306C; }
+    .story.analyzed { border-color: #F77737; }
+    .story.score { border-color: #C13584; }
+    .story-value {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .story-label {
+      font-size: 11px;
+      color: #8E8E8E;
+      font-weight: 600;
+    }
+    .story-sub {
+      font-size: 10px;
+      color: #666;
+    }
+    /* Content */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .content::-webkit-scrollbar { width: 2px; }
+    .content::-webkit-scrollbar-thumb { background: #262626; }
+    /* Quick Test */
+    .quick-test {
+      margin: 16px;
+      padding: 18px;
+      background: linear-gradient(135deg, #1A1A1A, #0A0A0A);
+      border-radius: 20px;
+      border: 1px solid #262626;
+    }
+    .qt-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .qt-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #F77737, #E1306C);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .qt-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .qt-select {
+      width: 100%;
+      padding: 12px 14px;
+      background: #000;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    .qt-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background: #000;
+      border: 1px solid #262626;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 14px;
+      resize: none;
+      height: 100px;
+      font-family: inherit;
+      margin-bottom: 14px;
+    }
+    .qt-textarea:focus, .qt-select:focus {
+      outline: none;
+      border-color: #F77737;
+    }
+    .qt-btn {
+      width: 100%;
+      height: 48px;
+      background: linear-gradient(135deg, #F77737, #E1306C, #C13584);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .qt-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    /* Section Header */
+    .section-header {
+      padding: 24px 16px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .section-link {
+      font-size: 14px;
+      color: #3B82F6;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    /* Alert Post */
+    .alert-post {
+      margin: 0 16px 16px;
+      background: #1A1A1A;
+      border-radius: 16px;
+      border: 1px solid #262626;
+      overflow: hidden;
+    }
+    .alert-post.high { border-color: #E1306C; }
+    .post-header {
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .post-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F77737, #E1306C);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .post-avatar.high {
+      background: linear-gradient(135deg, #E1306C, #C13584);
+    }
+    .post-info {
+      flex: 1;
+    }
+    .post-action {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .post-time {
+      font-size: 12px;
+      color: #8E8E8E;
+    }
+    .post-score {
+      padding: 7px 14px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #F77737, #FCAF45);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .post-score.high {
+      background: linear-gradient(135deg, #E1306C, #C13584);
+    }
+    .post-content {
+      padding: 0 14px 14px;
+    }
+    .post-reason {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #E0E0E0;
+      margin-bottom: 12px;
+    }
+    .post-message {
+      padding: 12px;
+      background: #000;
+      border-radius: 12px;
+      border: 1px solid #262626;
+      font-size: 13px;
+      color: #8E8E8E;
+      font-family: monospace;
+    }
+    .post-actions {
+      padding: 14px;
+      display: flex;
+      gap: 8px;
+    }
+    .post-btn {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: #8E8E8E;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .post-btn.report {
+      color: #E1306C;
+    }
+    /* Empty State */
+    .empty {
+      padding: 48px 16px;
+      text-align: center;
+    }
+    .empty-icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F77737, #E1306C, #C13584);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 60px;
+    }
+    .empty-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .empty-text {
+      font-size: 15px;
+      color: #8E8E8E;
+      line-height: 1.5;
+    }
+    /* Bottom Nav */
+    .bottom-nav {
+      height: 50px;
+      border-top: 0.5px solid #262626;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-size: 28px;
+      color: #8E8E8E;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .nav-btn.active {
+      color: #fff;
+    }
+    /* Home Bar */
+    .home-bar {
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .home-pill {
+      width: 134px;
+      height: 5px;
+      background: #262626;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Sentinel — Instagram Style</h1>
+  <p>Modern fraud detection UI preview</p>
+</div>
+
+<div class="phone">
+  <!-- Notch -->
+  <div class="notch"></div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span id="time">9:41</span>
+    <span>●●● ▲ ▮▮▮</span>
+  </div>
+
+  <!-- App Header -->
+  <div class="app-header">
+    <div class="logo">Sentinel</div>
+    <div class="notif-icon">🔔</div>
+  </div>
+
+  <!-- Stories -->
+  <div class="stories">
+    <div class="story active">
+      <div class="story-value" style="color:#10B981">🟢</div>
+      <div class="story-label">Active</div>
+      <div class="story-sub">Status</div>
+    </div>
+    <div class="story threat">
+      <div class="story-value" style="color:#E1306C" id="threats">0</div>
+      <div class="story-label">Blocked</div>
+      <div class="story-sub">Threats</div>
+    </div>
+    <div class="story analyzed">
+      <div class="story-value" style="color:#F77737" id="analyzed">0</div>
+      <div class="story-label">Total</div>
+      <div class="story-sub">Analyzed</div>
+    </div>
+    <div class="story score">
+      <div class="story-value" style="color:#C13584" id="avgScore">0</div>
+      <div class="story-label">Average</div>
+      <div class="story-sub">Score</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Quick Test -->
+    <div class="quick-test">
+      <div class="qt-header">
+        <div class="qt-icon">🧪</div>
+        <div class="qt-title">Quick Test</div>
+      </div>
+      <select class="qt-select" id="type">
+        <option value="sms">📱 SMS Message</option>
+        <option value="call_transcript">📞 Call Transcript</option>
+      </select>
+      <textarea class="qt-textarea" id="text" placeholder="Paste suspicious message here..."></textarea>
+      <button class="qt-btn" id="analyzeBtn" onclick="analyze()">Analyze Now</button>
+    </div>
+
+    <!-- Section Header -->
+    <div class="section-header">
+      <div class="section-title">Recent Alerts</div>
+      <div class="section-link">See All</div>
+    </div>
+
+    <!-- Alerts Feed -->
+    <div id="feed">
+      <div class="empty">
+        <div class="empty-icon">🛡️</div>
+        <div class="empty-title">All Clear!</div>
+        <div class="empty-text">No threats detected yet.<br>You're protected 24/7.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-btn active">🛡️</div>
+    <div class="nav-btn">📜</div>
+    <div class="nav-btn">⚙️</div>
+  </div>
+
+  <!-- Home Bar -->
+  <div class="home-bar">
+    <div class="home-pill"></div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://localhost:8000';
+  
+  // Update clock
+  function updateClock() {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    document.getElementById('time').textContent = h + ':' + m;
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+
+  // Load analytics
+  async function loadAnalytics() {
+    try {
+      const r = await fetch(API + '/analytics');
+      if (!r.ok) return;
+      const d = await r.json();
+      document.getElementById('threats').textContent = d.total_blocked || 0;
+      document.getElementById('analyzed').textContent = d.total_analyzed || 0;
+      document.getElementById('avgScore').textContent = Math.round(d.avg_score) || 0;
+    } catch (e) {}
+  }
+
+  // Load history
+  async function loadHistory() {
+    try {
+      const r = await fetch(API + '/alerts/history?page_size=10');
+      if (!r.ok) return;
+      const d = await r.json();
+      const items = d.items || [];
+      
+      if (items.length > 0) {
+        const feed = document.getElementById('feed');
+        feed.innerHTML = '';
+        items.forEach(item => {
+          feed.appendChild(buildPost(item));
+        });
+      }
+    } catch (e) {}
+  }
+
+  // Build post
+  function buildPost(item) {
+    const isHigh = item.score >= 80;
+    const post = document.createElement('div');
+    post.className = 'alert-post' + (isHigh ? ' high' : '');
+    
+    post.innerHTML = `
+      <div class="post-header">
+        <div class="post-avatar ${isHigh ? 'high' : ''}">
+          ${isHigh ? '⚠️' : 'ℹ️'}
+        </div>
+        <div class="post-info">
+          <div class="post-action">${item.action.replace(/_/g, ' ').toUpperCase()}</div>
+          <div class="post-time">${timeAgo(item.timestamp)}</div>
+        </div>
+        <div class="post-score ${isHigh ? 'high' : ''}">${item.score}%</div>
+      </div>
+      <div class="post-content">
+        <div class="post-reason">${item.reasoning}</div>
+        <div class="post-message">${item.masked_text}</div>
+      </div>
+      <div class="post-actions">
+        <button class="post-btn">✅ Safe</button>
+        <button class="post-btn report">🚨 Report</button>
+      </div>
+    `;
+    
+    return post;
+  }
+
+  // Time ago
+  function timeAgo(timestamp) {
+    try {
+      const dt = new Date(timestamp);
+      const diff = Date.now() - dt.getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return mins + 'm ago';
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return hours + 'h ago';
+      return Math.floor(hours / 24) + 'd ago';
+    } catch (e) {
+      return 'recently';
+    }
+  }
+
+  // Analyze
+  async function analyze() {
+    const text = document.getElementById('text').value.trim();
+    const type = document.getElementById('type').value;
+    if (!text) return;
+
+    const btn = document.getElementById('analyzeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Analyzing...';
+
+    try {
+      const r = await fetch(API + '/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: type,
+          raw_text: text,
+          device_id: 'preview'
+        })
+      });
+
+      if (r.ok) {
+        const data = await r.json();
+        document.getElementById('text').value = '';
+        
+        // Add to feed
+        const feed = document.getElementById('feed');
+        if (feed.querySelector('.empty')) {
+          feed.innerHTML = '';
+        }
+        feed.insertBefore(buildPost(data), feed.firstChild);
+        
+        // Update stats
+        loadAnalytics();
+      }
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analyze Now';
+    }
+  }
+
+  // Init
+  loadAnalytics();
+  loadHistory();
+  setInterval(loadAnalytics, 10000);
+</script>
+
+</body>
+</html>
