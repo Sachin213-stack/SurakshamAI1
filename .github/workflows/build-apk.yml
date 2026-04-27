@@ -53,8 +53,17 @@ jobs:
       - name: Build APK
         working-directory: sentinel_android
         run: |
-          flutter build apk --release --verbose \
-            --dart-define=API_URL=${{ secrets.API_URL || 'https://sentinel-backend.up.railway.app' }} 2>&1 | tee build.log
+          echo "=== Starting Flutter Build ==="
+          flutter clean
+          flutter pub get
+          flutter build apk --release \
+            --dart-define=API_URL=${{ secrets.API_URL || 'https://sentinel-backend.up.railway.app' }} \
+            --no-tree-shake-icons 2>&1 | tee build.log || {
+              echo "=== BUILD FAILED ==="
+              echo "=== Last 100 lines of build output ==="
+              tail -100 build.log
+              exit 1
+            }
           
       - name: Upload build log on failure
         if: failure()
