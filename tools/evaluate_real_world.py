@@ -7,6 +7,9 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
+POSITIVE_LABELS = {"scam", "fraud", "phishing", "vishing", "smishing", "1", "true", "positive"}
+NEGATIVE_LABELS = {"legitimate", "ham", "safe", "0", "false", "negative", "normal"}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Replay labeled real-world data against Sentinel API and compute metrics.")
@@ -34,12 +37,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def normalize_truth(value: str) -> bool:
-    positive = {"scam", "fraud", "phishing", "vishing", "smishing", "1", "true", "positive"}
-    negative = {"legitimate", "ham", "safe", "0", "false", "negative", "normal"}
     v = (value or "").strip().lower()
-    if v in positive:
+    if v in POSITIVE_LABELS:
         return True
-    if v in negative:
+    if v in NEGATIVE_LABELS:
         return False
     raise ValueError(f"Unsupported ground_truth label: {value!r}")
 
@@ -111,7 +112,9 @@ def main() -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     if args.overlay_threshold >= args.block_threshold:
-        raise ValueError("overlay-threshold must be lower than block-threshold")
+        raise ValueError(
+            f"overlay-threshold ({args.overlay_threshold}) must be lower than block-threshold ({args.block_threshold})"
+        )
 
     threshold_grid = [int(x.strip()) for x in args.threshold_grid.split(",") if x.strip()]
     headers = {args.api_key_header: args.api_key}
@@ -220,13 +223,15 @@ def main() -> int:
     analyzed_rows = [r for r in rows if not r.get("error") and isinstance(r.get("score"), (int, float))]
 
     overall_metrics = compute_metrics(analyzed_rows, lambda r: r.get("action") != "IGNORE")
-    def metrics_at_threshold(threshold: int) -> dict[str, Any]:
-        return compute_metrics(analyzed_rows, lambda r: float(r.get("score", 0)) >= threshold)
+    def metrics_at_threshold(rows: list[dict[str, Any]], threshold: int) -> dict[str, Any]:
+        return compute_metrics(rows, lambda r: float(r.get("score", 0)) >= threshold)
 
-    threshold_sensitivity = {str(t): metrics_at_threshold(t) for t in threshold_grid}
+    threshold_sensitivity = {str(t): metrics_at_threshold(analyzed_rows, t) for t in threshold_grid}
 
     score_bands = {
-        "0-49": sum(1 for r in analyzed_rows if 0 <= float(r.get("score", 0)) < args.overlay_threshold),
+        f"0-{args.overlay_threshold - 1}": sum(
+            1 for r in analyzed_rows if 0 <= float(r.get("score", 0)) < args.overlay_threshold
+        ),
         f"{args.overlay_threshold}-{args.block_threshold - 1}": sum(
             1 for r in analyzed_rows if args.overlay_threshold <= float(r.get("score", 0)) < args.block_threshold
         ),
