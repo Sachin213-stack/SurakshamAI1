@@ -64,6 +64,14 @@ def update_feedback(alert_id: str, feedback: str) -> bool:
     return False
 
 
+def get_alert_by_id(alert_id: str) -> Optional[AlertHistoryItem]:
+    with _lock:
+        for alert in _alerts:
+            if alert.id == alert_id:
+                return alert
+    return None
+
+
 # ─── Analytics ────────────────────────────────────────────────────────────────
 
 def get_analytics(device_id: Optional[str] = None) -> AnalyticsSummary:
