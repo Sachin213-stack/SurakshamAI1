@@ -7,8 +7,6 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-import httpx
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Replay labeled real-world data against Sentinel API and compute metrics.")
@@ -101,6 +99,13 @@ def get_slice_metrics(rows: list[dict[str, Any]], field: str) -> dict[str, Any]:
 
 def main() -> int:
     args = parse_args()
+    try:
+        import httpx  # type: ignore
+    except ModuleNotFoundError as exc:
+        raise SystemExit(
+            "Missing dependency: httpx. Install project requirements first (pip install -r requirements.txt)."
+        ) from exc
+
     input_path = Path(args.input_csv)
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
