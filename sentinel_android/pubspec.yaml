@@ -9,21 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
-  # HTTP & WebSocket
   http: ^1.2.0
   web_socket_channel: ^2.4.0
-
-  # Permissions
-  permission_handler: ^11.3.1
-
-  # Storage
   shared_preferences: ^2.2.3
-
-  # State Management
   provider: ^6.1.2
-
-  # UI
   cupertino_icons: ^1.0.8
 
 dev_dependencies:
