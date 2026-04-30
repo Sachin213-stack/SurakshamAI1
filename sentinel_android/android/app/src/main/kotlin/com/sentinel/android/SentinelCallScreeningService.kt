@@ -32,8 +32,8 @@ class SentinelCallScreeningService : CallScreeningService() {
 
         val prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE)
         val apiUrl   = prefs.getString("api_url", "http://10.0.2.2:8000")!!
-        val deviceId = prefs.getString("device_id",
-            android.provider.Settings.Secure.getAndroidId(contentResolver))!!
+        val deviceId = DeviceIdProvider.getOrCreate(this)
+        val apiKey = prefs.getString("api_key", "") ?: ""
 
         val result = runBlocking(Dispatchers.IO) {
             try {
@@ -42,7 +42,8 @@ class SentinelCallScreeningService : CallScreeningService() {
                     text = "Incoming call from: $callerNumber",
                     type = "call_transcript",
                     sourceNumber = callerNumber,
-                    deviceId = deviceId
+                    deviceId = deviceId,
+                    apiKey = apiKey
                 )
             } catch (e: Exception) {
                 Log.e(TAG, "Screening failed: ${e.message}")
@@ -99,9 +100,10 @@ class SentinelCallScreeningService : CallScreeningService() {
         pendingResult?.let { result ->
             val prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE)
             val apiUrl   = prefs.getString("api_url", "http://10.0.2.2:8000")!!
-            val deviceId = prefs.getString("device_id", "android")!!
+            val deviceId = DeviceIdProvider.getOrCreate(this)
+            val apiKey = prefs.getString("api_key", "") ?: ""
             Thread {
-                try { SentinelApiClient.submitFeedback(apiUrl, result.id, "false_positive", deviceId) }
+                try { SentinelApiClient.submitFeedback(apiUrl, result.id, "false_positive", deviceId, apiKey) }
                 catch (e: Exception) { Log.e(TAG, "Feedback failed: ${e.message}") }
             }.start()
         }
@@ -111,8 +113,17 @@ class SentinelCallScreeningService : CallScreeningService() {
     /** Called by CallDecisionActivity when user taps "Block" or countdown expires */
     fun blockCall() {
         val details = pendingCallDetails ?: return
+        val result = pendingResult ?: run {
+            Log.e(TAG, "No pending result found while blocking call")
+            respondToCall(details, CallResponse.Builder()
+                .setRejectCall(true)
+                .setSkipCallLog(false)
+                .build())
+            clearPending()
+            return
+        }
         Log.w(TAG, "Call BLOCKED by user/timeout")
-        NotificationHelper.showCallBlockedAlert(this, pendingResult!!, "Unknown")
+        NotificationHelper.showCallBlockedAlert(this, result, "Unknown")
         respondToCall(details, CallResponse.Builder()
             .setRejectCall(true)
             .setSkipCallLog(false)

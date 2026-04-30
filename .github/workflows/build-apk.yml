@@ -53,6 +53,7 @@ jobs:
       - name: Build APK
         working-directory: sentinel_android
         run: |
+          set -o pipefail
           echo "=== Starting Flutter Build ==="
           flutter clean
           flutter pub get
@@ -60,6 +61,11 @@ jobs:
           echo "=== Build completed ==="
           echo "=== Checking output files ==="
           ls -la build/app/outputs/flutter-apk/ || echo "Output directory not found"
+          echo "=== Verifying APK was produced ==="
+          ls -lh build/app/outputs/flutter-apk/*.apk || {
+            echo "ERROR: No APK found after build"
+            exit 1
+          }
           
       - name: List all APK files
         working-directory: sentinel_android

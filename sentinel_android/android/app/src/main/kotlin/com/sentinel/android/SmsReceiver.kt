@@ -36,15 +36,17 @@ class SmsReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val prefs = context.getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE)
-                val deviceId = prefs.getString("device_id", android.provider.Settings.Secure.getAndroidId(context.contentResolver))
+                val deviceId = DeviceIdProvider.getOrCreate(context)
                 val apiUrl = prefs.getString("api_url", "http://10.0.2.2:8000") // 10.0.2.2 = localhost for emulator
+                val apiKey = prefs.getString("api_key", "") ?: ""
 
                 val result = SentinelApiClient.analyze(
                     apiUrl = apiUrl!!,
                     text = body,
                     type = "sms",
                     sourceNumber = sender,
-                    deviceId = deviceId!!
+                    deviceId = deviceId,
+                    apiKey = apiKey
                 )
 
                 Log.d(TAG, "Analysis result: score=${result.score}, action=${result.action}")

@@ -1,0 +1,5 @@
+id,flow,type,report_type,raw_text,source_number,device_id,ground_truth,language,region,message_source_type,writing_style,user_note
+1,analyze,sms,,Your KYC is suspended. Click this link now to avoid account freeze.,+911234567890,device-a,scam,en,IN,bank_sms,urgent,
+2,analyze,sms,,Your OTP for payment is 849112. Do not share with anyone.,VM-BNK123,device-a,legitimate,en,IN,otp_sms,formal,
+3,report,call_transcript,call_transcript,Caller says they are from RBI and asks to transfer funds immediately.,+918888888888,device-b,scam,en,IN,voice_call,urgent,User felt pressured during call
+4,analyze,sms,,Your electricity bill is overdue. Pay only via official app by today.,TX-POWER,device-c,legitimate,en,IN,utility_sms,formal,
