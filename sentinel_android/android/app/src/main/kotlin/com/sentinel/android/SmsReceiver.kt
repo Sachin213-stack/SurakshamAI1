@@ -36,11 +36,7 @@ class SmsReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val prefs = context.getSharedPreferences("sentinel_prefs", Context.MODE_PRIVATE)
-                val defaultDeviceId = android.provider.Settings.Secure.getString(
-                    context.contentResolver,
-                    android.provider.Settings.Secure.ANDROID_ID
-                ) ?: "android"
-                val deviceId = prefs.getString("device_id", defaultDeviceId)
+                val deviceId = DeviceIdProvider.getOrCreate(context)
                 val apiUrl = prefs.getString("api_url", "http://10.0.2.2:8000") // 10.0.2.2 = localhost for emulator
                 val apiKey = prefs.getString("api_key", "") ?: ""
 
@@ -49,7 +45,7 @@ class SmsReceiver : BroadcastReceiver() {
                     text = body,
                     type = "sms",
                     sourceNumber = sender,
-                    deviceId = deviceId!!,
+                    deviceId = deviceId,
                     apiKey = apiKey
                 )
 

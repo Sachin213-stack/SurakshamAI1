@@ -32,11 +32,7 @@ class SentinelCallScreeningService : CallScreeningService() {
 
         val prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE)
         val apiUrl   = prefs.getString("api_url", "http://10.0.2.2:8000")!!
-        val defaultDeviceId = android.provider.Settings.Secure.getString(
-            contentResolver,
-            android.provider.Settings.Secure.ANDROID_ID
-        ) ?: "android"
-        val deviceId = prefs.getString("device_id", defaultDeviceId)!!
+        val deviceId = DeviceIdProvider.getOrCreate(this)
         val apiKey = prefs.getString("api_key", "") ?: ""
 
         val result = runBlocking(Dispatchers.IO) {
@@ -104,7 +100,7 @@ class SentinelCallScreeningService : CallScreeningService() {
         pendingResult?.let { result ->
             val prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE)
             val apiUrl   = prefs.getString("api_url", "http://10.0.2.2:8000")!!
-            val deviceId = prefs.getString("device_id", "android")!!
+            val deviceId = DeviceIdProvider.getOrCreate(this)
             val apiKey = prefs.getString("api_key", "") ?: ""
             Thread {
                 try { SentinelApiClient.submitFeedback(apiUrl, result.id, "false_positive", deviceId, apiKey) }
