@@ -23,6 +23,7 @@ object DeviceIdProvider {
                 return@synchronized recheck
             }
 
+            // ANDROID_ID can be null on some devices or profiles.
             val androidId = Settings.Secure.getString(
                 context.contentResolver,
                 Settings.Secure.ANDROID_ID
@@ -31,7 +32,7 @@ object DeviceIdProvider {
                 it.isNotBlank() && it != INVALID_EMULATOR_ANDROID_ID
             }
             val deviceId = sanitizedAndroidId ?: UUID.randomUUID().toString()
-            prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply()
+            prefs.edit().putString(KEY_DEVICE_ID, deviceId).commit()
             deviceId
         }
     }
