@@ -20,6 +20,7 @@ object DeviceIdProvider {
             Settings.Secure.ANDROID_ID
         )
         val sanitizedAndroidId = androidId?.takeIf {
+            // Known bad ANDROID_ID reported by emulators and some reset devices.
             it.isNotBlank() && it != "9774d56d682e549c"
         }
         val deviceId = sanitizedAndroidId ?: UUID.randomUUID().toString()
