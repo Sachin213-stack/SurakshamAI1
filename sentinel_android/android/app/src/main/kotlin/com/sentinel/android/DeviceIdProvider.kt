@@ -19,8 +19,8 @@ object DeviceIdProvider {
             context.contentResolver,
             Settings.Secure.ANDROID_ID
         )
-        val fallback = if (!androidId.isNullOrBlank()) androidId else UUID.randomUUID().toString()
-        prefs.edit().putString(KEY_DEVICE_ID, fallback).apply()
-        return fallback
+        val deviceId = if (!androidId.isNullOrBlank()) androidId else UUID.randomUUID().toString()
+        prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply()
+        return deviceId
     }
 }
