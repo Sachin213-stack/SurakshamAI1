@@ -32,6 +32,7 @@ object DeviceIdProvider {
                 it.isNotBlank() && it != INVALID_EMULATOR_ANDROID_ID
             }
             val deviceId = sanitizedAndroidId ?: UUID.randomUUID().toString()
+            // Commit synchronously so callers get a stable ID immediately.
             prefs.edit().putString(KEY_DEVICE_ID, deviceId).commit()
             deviceId
         }
