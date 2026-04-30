@@ -19,7 +19,10 @@ object DeviceIdProvider {
             context.contentResolver,
             Settings.Secure.ANDROID_ID
         )
-        val deviceId = if (!androidId.isNullOrBlank()) androidId else UUID.randomUUID().toString()
+        val sanitizedAndroidId = androidId?.takeIf {
+            it.isNotBlank() && it != "9774d56d682e549c"
+        }
+        val deviceId = sanitizedAndroidId ?: UUID.randomUUID().toString()
         prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply()
         return deviceId
     }
