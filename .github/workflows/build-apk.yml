@@ -53,6 +53,7 @@ jobs:
       - name: Build APK
         working-directory: sentinel_android
         run: |
+          set -o pipefail
           echo "=== Starting Flutter Build ==="
           flutter clean
           flutter pub get
@@ -64,6 +65,11 @@ jobs:
               tail -100 build.log
               exit 1
             }
+          echo "=== Verifying APK was produced ==="
+          ls -lh build/app/outputs/flutter-apk/app-release.apk || {
+            echo "ERROR: APK not found after build"
+            exit 1
+          }
           
       - name: Upload build log on failure
         if: failure()
