@@ -28,8 +28,7 @@ class SentinelBackgroundService : Service() {
             try {
                 val prefs = getSharedPreferences("sentinel_prefs", MODE_PRIVATE)
                 val apiUrl = prefs.getString("api_url", "http://10.0.2.2:8000")!!
-                val deviceId = prefs.getString("device_id",
-                    android.provider.Settings.Secure.getAndroidId(contentResolver))!!
+                val deviceId = DeviceIdProvider.getOrCreate(this@SentinelBackgroundService)
                 val fcmToken = prefs.getString("fcm_token", "no_fcm_token") ?: "no_fcm_token"
                 val apiKey = prefs.getString("api_key", "") ?: ""
 
