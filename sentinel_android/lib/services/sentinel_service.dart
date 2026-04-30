@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -118,7 +119,7 @@ class SentinelService extends ChangeNotifier {
               ...json,
               if (json['id'] == null && json['alert_id'] != null) 'id': json['alert_id'],
             };
-            final alert = AlertModel.fromJson(normalized);
+            final alert = AlertModel.fromJson(Map<String, dynamic>.from(normalized));
             latestAlert = alert;
             _upsertAlert(alert);
             notifyListeners();

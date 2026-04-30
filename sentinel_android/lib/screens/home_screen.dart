@@ -493,9 +493,8 @@ class _DashboardTab extends StatelessWidget {
     );
   }
 
-  String _timeAgo(String timestamp) {
+  String _timeAgo(DateTime dt) {
     try {
-      final dt = DateTime.parse(timestamp);
       final diff = DateTime.now().difference(dt);
       if (diff.inMinutes < 1) return 'just now';
       if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
