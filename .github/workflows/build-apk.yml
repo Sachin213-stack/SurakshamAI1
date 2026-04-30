@@ -56,27 +56,35 @@ jobs:
           echo "=== Starting Flutter Build ==="
           flutter clean
           flutter pub get
-          flutter build apk --release \
-            --dart-define=API_URL=${{ secrets.API_URL || 'https://sentinel-backend.up.railway.app' }} \
-            --no-tree-shake-icons 2>&1 | tee build.log || {
-              echo "=== BUILD FAILED ==="
-              echo "=== Last 100 lines of build output ==="
-              tail -100 build.log
-              exit 1
-            }
+          flutter build apk --release --split-per-abi
+          echo "=== Build completed ==="
+          echo "=== Checking output files ==="
+          ls -la build/app/outputs/flutter-apk/ || echo "Output directory not found"
           
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: sentinel_android/build.log
+      - name: List all APK files
+        working-directory: sentinel_android
+        run: |
+          echo "=== All APK files ==="
+          find build/app/outputs -name "*.apk" -type f
 
       - name: Rename APK
         run: |
           mkdir -p release
-          cp sentinel_android/build/app/outputs/flutter-apk/app-release.apk \
-             release/SentinelAgent-v${{ github.run_number }}.apk
+          # Copy the universal APK or the first available one
+          if [ -f sentinel_android/build/app/outputs/flutter-apk/app-release.apk ]; then
+            cp sentinel_android/build/app/outputs/flutter-apk/app-release.apk \
+               release/SentinelAgent-v${{ github.run_number }}.apk
+          elif [ -f sentinel_android/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
+            cp sentinel_android/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+               release/SentinelAgent-v${{ github.run_number }}.apk
+          elif [ -f sentinel_android/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ]; then
+            cp sentinel_android/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+               release/SentinelAgent-v${{ github.run_number }}.apk
+          else
+            echo "ERROR: No APK file found!"
+            exit 1
+          fi
+          ls -la release/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
